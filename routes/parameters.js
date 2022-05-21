@@ -12,6 +12,15 @@ router.get("/", async function (req, res, next) {
   }
 });
 
+router.get("/detail", async function (req, res, next) {
+  try {
+    res.json(await parameter.getParametersDetail());
+  } catch (err) {
+    console.error(`Error while getting parameter `, err.message);
+    next(err);
+  }
+});
+
 router.post("/", async function (req, res, next) {
   try {
     res.json(await parameter.create(req.body));

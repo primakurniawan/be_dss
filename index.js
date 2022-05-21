@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const port = 3000;
+const cors = require("cors");
 
 const aspectsRouter = require("./routes/aspects");
 const typesRouter = require("./routes/types");
@@ -14,6 +15,7 @@ app.use(
     extended: true,
   })
 );
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.json({ message: "ok" });

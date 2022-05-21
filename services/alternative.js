@@ -3,8 +3,58 @@ const { emptyOrRows } = require("../helper");
 const config = require("../config");
 
 async function getMultiple() {
-  const result = await db.query(`SELECT * FROM alternatives`);
-  const data = emptyOrRows(result);
+  const result = await db.query(
+    `SELECT 
+    alternative_id, alternatives.name AS alternative_name, 
+    aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, 
+    parameter_id, parameters.name AS parameter_name, parameters.point 
+    FROM alternative_parameter 
+    INNER JOIN alternatives ON alternative_id=alternatives.id 
+    INNER JOIN parameters ON parameter_id=parameters.id 
+    INNER JOIN criteria ON parameters.criteria_id=criteria.id 
+    INNER JOIN aspects ON criteria.aspect_id=aspects.id 
+    GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
+  );
+
+  const alternatives = [];
+
+  result.forEach((element) => {
+    const criteria = {
+      criteria_id: element.criteria_id,
+      criteria_name: element.criteria_name,
+      criteria_percentage: element.criteria_percentage,
+      parameter: {
+        parameter_id: element.parameter_id,
+        parameter_name: element.parameter_name,
+        point: element.point,
+      },
+    };
+
+    const aspect = {
+      aspect_id: element.aspect_id,
+      aspect_name: element.aspect_name,
+      aspect_percentage: element.aspect_percentage,
+      criteria: [criteria],
+    };
+
+    const alternative = {
+      alternative_id: element.alternative_id,
+      alternative_name: element.alternative_name,
+      aspects: [aspect],
+    };
+
+    if (element.alternative_id === alternatives[alternatives.length - 1]?.alternative_id && alternatives.length !== 0) {
+      if (element.aspect_id === alternatives[alternatives.length - 1].aspects[alternatives[alternatives.length - 1].aspects.length - 1]?.aspect_id) {
+        alternatives[alternatives.length - 1].aspects[alternatives[alternatives.length - 1].aspects.length - 1].criteria.push(criteria);
+      } else {
+        alternatives[alternatives.length - 1].aspects.push(aspect);
+      }
+    } else {
+      alternatives.push(alternative);
+    }
+  });
+
+  const data = emptyOrRows(alternatives);
 
   return {
     data,
@@ -54,12 +104,15 @@ async function getAlternativeParameters(id) {
   };
 }
 
-async function getRankAlternative(alternatives_id, parameters_id) {
+// alternatives_id
+async function getRankAlternative(parameters_id) {
   const resultAlternatives = await db.query(
-    `SELECT alternative_id, alternatives.name AS alternative_name, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage , criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, parameter_id, parameters.name AS parameter_name, parameters.point FROM alternative_parameter INNER JOIN alternatives ON alternative_id=alternatives.id INNER JOIN parameters ON parameter_id=parameters.id INNER JOIN criteria ON parameters.criteria_id=criteria.id INNER JOIN aspects ON criteria.aspect_id=aspects.id WHERE alternative_parameter.alternative_id IN (${alternatives_id.join(
-      ","
-    )}) GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
+    `SELECT alternative_id, alternatives.name AS alternative_name, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage , criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, parameter_id, parameters.name AS parameter_name, parameters.point FROM alternative_parameter INNER JOIN alternatives ON alternative_id=alternatives.id INNER JOIN parameters ON parameter_id=parameters.id INNER JOIN criteria ON parameters.criteria_id=criteria.id INNER JOIN aspects ON criteria.aspect_id=aspects.id WHERE alternative_parameter.alternative_id GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
   );
+
+  // IN (${alternatives_id.join(
+  //   ","
+  // )})
 
   const alternatives = [];
 
@@ -185,18 +238,25 @@ async function getRankAlternative(alternatives_id, parameters_id) {
     alternative.point = alternative.aspects.reduce((accumulator, currentValue) => accumulator + currentValue.point, 0);
   });
 
-  alternatives.sort((a, b) => b.point - a.point);
+  const rank = alternatives
+    .sort((a, b) => b.point - a.point)
+    .map((e, i) => {
+      return {
+        ...e,
+        rank: i + 1,
+      };
+    });
 
-  return {
-    data: {
-      alternatives,
-      aspects,
-    },
-  };
+  return { rank };
 }
 
 async function create(body) {
-  const result = await db.query(`INSERT INTO alternatives(name) VALUES ('${body.name}')`);
+  const resultAlternative = await db.query(`INSERT INTO alternatives(name) VALUES ('${body.name}')`);
+
+  const parameters = body.parameters_id.map((e) => {
+    return `(${resultAlternative.insertId},${e})`;
+  });
+  const result = await db.query(`INSERT INTO alternative_parameter(alternative_id, parameter_id) VALUES ${parameters.join(",")}`);
 
   let message = "Error in creating alternative";
 
@@ -207,23 +267,15 @@ async function create(body) {
   return { message };
 }
 
-async function addParameter(id, body) {
+async function update(id, body) {
+  await db.query(`UPDATE alternatives SET name='${body.name}' WHERE id=${id}`);
+
+  await db.query(`DELETE FROM alternative_parameter WHERE alternative_id=${id}`);
+
   const parameters = body.parameters_id.map((e) => {
     return `(${id},${e})`;
   });
   const result = await db.query(`INSERT INTO alternative_parameter(alternative_id, parameter_id) VALUES ${parameters.join(",")}`);
-
-  let message = "Error in creating alternative's parameters";
-
-  if (result.affectedRows) {
-    message = "alternative's parameters created successfully";
-  }
-
-  return { message };
-}
-
-async function update(id, body) {
-  const result = await db.query(`UPDATE alternatives SET name='${body.name}' WHERE id=${id}`);
 
   let message = "Error in updating alternative";
 
@@ -235,6 +287,8 @@ async function update(id, body) {
 }
 
 async function remove(id) {
+  await db.query(`DELETE FROM alternative_parameter WHERE alternative_id=${id}`);
+
   const result = await db.query(`DELETE FROM alternatives WHERE id=${id}`);
 
   let message = "Error in deleting alternative";
@@ -251,7 +305,7 @@ module.exports = {
   create,
   update,
   remove,
-  addParameter,
+  // addParameter,
   getAlternativeParameters,
   getRankAlternative,
 };

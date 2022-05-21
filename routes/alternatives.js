@@ -12,9 +12,10 @@ router.get("/", async function (req, res, next) {
   }
 });
 
-router.get("/rank", async function (req, res, next) {
+router.post("/rank", async function (req, res, next) {
   try {
-    res.json(await alternative.getRankAlternative(req.body.alternatives_id, req.body.parameters_id));
+    res.json(await alternative.getRankAlternative(req.body.parameters_id));
+    // req.body.alternatives_id,
   } catch (err) {
     console.error(`Error while getting criteria `, err.message);
     next(err);
@@ -39,14 +40,14 @@ router.post("/", async function (req, res, next) {
   }
 });
 
-router.post("/:id", async function (req, res, next) {
-  try {
-    res.json(await alternative.addParameter(req.params.id, req.body));
-  } catch (err) {
-    console.error(`Error while creating aspect`, err.message);
-    next(err);
-  }
-});
+// router.post("/:id", async function (req, res, next) {
+//   try {
+//     res.json(await alternative.addParameter(req.params.id, req.body));
+//   } catch (err) {
+//     console.error(`Error while creating aspect`, err.message);
+//     next(err);
+//   }
+// });
 
 /* PUT aspect */
 router.patch("/:id", async function (req, res, next) {

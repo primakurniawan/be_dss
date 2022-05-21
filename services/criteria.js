@@ -1,9 +1,12 @@
 const db = require("./db");
-const { formatSnakeCase, emptyOrRows } = require("../helper");
+const { emptyOrRows } = require("../helper");
 const config = require("../config");
 
 async function getMultiple(query) {
-  const rows = await db.query(`SELECT criteria.id, criteria.name, criteria.percentage FROM criteria INNER JOIN aspects ON criteria.aspect_id = aspects.id WHERE aspect_id=${query.aspect_id};
+  const rows =
+    await db.query(`SELECT criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage FROM criteria INNER JOIN aspects ON criteria.aspect_id = aspects.id ${
+      query.aspect_id ? `WHERE aspect_id=${query.aspect_id};` : ""
+    } 
   `);
   const data = emptyOrRows(rows);
 
@@ -14,7 +17,7 @@ async function getMultiple(query) {
 
 async function create(body) {
   const result = await db.query(`
-  INSERT INTO criteria(aspect_id, name) VALUES (${body.aspect_id},'${body.name}');
+  INSERT INTO criteria(aspect_id, name, percentage) VALUES (${body.aspect_id},'${body.name}',${body.percentage});
 `);
 
   let message = "Error in creating criteria";
