@@ -8,6 +8,7 @@ const typesRouter = require("./routes/types");
 const criteriaRouter = require("./routes/criteria");
 const parametersRouter = require("./routes/parameters");
 const alternativesRouter = require("./routes/alternatives");
+const storesRouter = require("./routes/stores");
 
 app.use(express.json());
 app.use(
@@ -26,6 +27,7 @@ app.use("/aspects", aspectsRouter);
 app.use("/criteria", criteriaRouter);
 app.use("/parameters", parametersRouter);
 app.use("/alternatives", alternativesRouter);
+app.use("/stores", storesRouter);
 
 /* Error handler middleware */
 app.use((err, req, res, next) => {
