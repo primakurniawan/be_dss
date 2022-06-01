@@ -2,21 +2,18 @@ const db = require("./db");
 const { emptyOrRows } = require("../helper");
 const config = require("../config");
 
-async function getMultiple(query) {
+async function getMultiple() {
   const rows =
-    await db.query(`SELECT parameters.id, parameters.name, parameters.point, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage  FROM parameters INNER JOIN criteria ON parameters.criteria_id = criteria.id INNER JOIN aspects ON criteria.aspect_id = aspects.id ${
-      query.criteria_id ? `WHERE criteria_id=${query.criteria_id};` : ""
-    } 
+    await db.query(`SELECT parameters.id, parameters.name, parameters.point, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage  FROM parameters INNER JOIN criteria ON parameters.criteria_id = criteria.id INNER JOIN aspects ON criteria.aspect_id = aspects.id 
   `);
+
   const data = emptyOrRows(rows);
 
-  return {
-    data,
-  };
+  return data;
 }
 
-async function create(body) {
-  const result = await db.query(`INSERT INTO parameters(criteria_id, name, point) VALUES (${body.criteria_id},'${body.name}',${body.point})`);
+async function create(criteria_id, name, point) {
+  const result = await db.query(`INSERT INTO parameters(criteria_id, name, point) VALUES (${criteria_id},'${name}',${point})`);
 
   let message = "Error in creating parameter";
 
@@ -24,11 +21,11 @@ async function create(body) {
     message = "parameter created successfully";
   }
 
-  return { message };
+  return message;
 }
 
-async function update(id, body) {
-  const result = await db.query(`UPDATE parameters SET criteria_id=${body.criteria_id}, name='${body.name}', point=${body.point} WHERE id=${id}`);
+async function update(id, name, point) {
+  const result = await db.query(`UPDATE parameters SET name='${name}', point=${point} WHERE id=${id}`);
 
   let message = "Error in updating parameter";
 
@@ -36,7 +33,7 @@ async function update(id, body) {
     message = "parameter updated successfully";
   }
 
-  return { message };
+  return message;
 }
 
 async function remove(id) {
@@ -48,7 +45,7 @@ async function remove(id) {
     message = "parameter deleted successfully";
   }
 
-  return { message };
+  return message;
 }
 
 async function getParametersDetail() {
@@ -95,9 +92,7 @@ async function getParametersDetail() {
 
   const data = emptyOrRows(aspects);
 
-  return {
-    data,
-  };
+  return data;
 }
 
 module.exports = {

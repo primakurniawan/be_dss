@@ -6,13 +6,11 @@ async function getMultiple() {
   const rows = await db.query(`SELECT * FROM aspects;`);
   const data = helper.emptyOrRows(rows);
 
-  return {
-    data,
-  };
+  return data;
 }
 
-async function create(body) {
-  const result = await db.query(`INSERT INTO aspects(name, percentage) VALUES ('${body.name}',${body.percentage})`);
+async function create(name, percentage) {
+  const result = await db.query(`INSERT INTO aspects(name, percentage) VALUES ('${name}',${percentage})`);
 
   let message = "Error in creating aspect";
 
@@ -20,11 +18,11 @@ async function create(body) {
     message = "Aspect created successfully";
   }
 
-  return { message };
+  return message;
 }
 
-async function update(id, body) {
-  const result = await db.query(`UPDATE aspects SET name='${body.name}',percentage=${body.percentage} WHERE id=${id}`);
+async function update(id, name, percentage) {
+  const result = await db.query(`UPDATE aspects SET name='${name}',percentage=${percentage} WHERE id=${id}`);
 
   let message = "Error in updating aspect";
 
@@ -32,7 +30,7 @@ async function update(id, body) {
     message = "aspect updated successfully";
   }
 
-  return { message };
+  return message;
 }
 
 async function remove(id) {
@@ -44,7 +42,7 @@ async function remove(id) {
     message = "aspect deleted successfully";
   }
 
-  return { message };
+  return message;
 }
 
 module.exports = {

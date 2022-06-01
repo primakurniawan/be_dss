@@ -2,7 +2,7 @@ const db = require("./db");
 const { emptyOrRows } = require("../helper");
 const config = require("../config");
 
-async function getMultiple() {
+exports.getMultiple = async () => {
   const result = await db.query(
     `SELECT 
     alternative_id, alternatives.name AS alternative_name, 
@@ -56,12 +56,10 @@ async function getMultiple() {
 
   const data = emptyOrRows(alternatives);
 
-  return {
-    data,
-  };
-}
+  return data;
+};
 
-async function getAlternativeParameters(id) {
+exports.getAlternativeParameters = async (id) => {
   const result = await db.query(
     `SELECT alternative_id, alternatives.name AS alternative_name, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, parameter_id, parameters.name AS parameter_name, parameters.point FROM alternative_parameter INNER JOIN alternatives ON alternative_id=alternatives.id INNER JOIN parameters ON parameter_id=parameters.id INNER JOIN criteria ON parameters.criteria_id=criteria.id INNER JOIN aspects ON criteria.aspect_id=aspects.id WHERE alternative_parameter.alternative_id=${id} GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
   );
@@ -99,20 +97,13 @@ async function getAlternativeParameters(id) {
 
   const data = emptyOrRows(alternative);
 
-  return {
-    data,
-  };
-}
+  return data;
+};
 
-// alternatives_id
-async function getRankAlternative(parameters_id) {
+exports.getRankAlternative = async (parameters_id) => {
   const resultAlternatives = await db.query(
     `SELECT alternative_id, alternatives.name AS alternative_name, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage , criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, parameter_id, parameters.name AS parameter_name, parameters.point FROM alternative_parameter INNER JOIN alternatives ON alternative_id=alternatives.id INNER JOIN parameters ON parameter_id=parameters.id INNER JOIN criteria ON parameters.criteria_id=criteria.id INNER JOIN aspects ON criteria.aspect_id=aspects.id WHERE alternative_parameter.alternative_id GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
   );
-
-  // IN (${alternatives_id.join(
-  //   ","
-  // )})
 
   const alternatives = [];
 
@@ -247,13 +238,13 @@ async function getRankAlternative(parameters_id) {
       };
     });
 
-  return { rank };
-}
+  return rank;
+};
 
-async function create(body) {
-  const resultAlternative = await db.query(`INSERT INTO alternatives(name) VALUES ('${body.name}')`);
+exports.create = async (name, parameters_id) => {
+  const resultAlternative = await db.query(`INSERT INTO alternatives(name) VALUES ('${name}')`);
 
-  const parameters = body.parameters_id.map((e) => {
+  const parameters = parameters_id.map((e) => {
     return `(${resultAlternative.insertId},${e})`;
   });
   const result = await db.query(`INSERT INTO alternative_parameter(alternative_id, parameter_id) VALUES ${parameters.join(",")}`);
@@ -264,15 +255,15 @@ async function create(body) {
     message = "alternative created successfully";
   }
 
-  return { message };
-}
+  return message;
+};
 
-async function update(id, body) {
-  await db.query(`UPDATE alternatives SET name='${body.name}' WHERE id=${id}`);
+exports.update = async (id, name, parameters_id) => {
+  await db.query(`UPDATE alternatives SET name='${name}' WHERE id=${id}`);
 
   await db.query(`DELETE FROM alternative_parameter WHERE alternative_id=${id}`);
 
-  const parameters = body.parameters_id.map((e) => {
+  const parameters = parameters_id.map((e) => {
     return `(${id},${e})`;
   });
   const result = await db.query(`INSERT INTO alternative_parameter(alternative_id, parameter_id) VALUES ${parameters.join(",")}`);
@@ -283,10 +274,10 @@ async function update(id, body) {
     message = "alternative updated successfully";
   }
 
-  return { message };
-}
+  return message;
+};
 
-async function remove(id) {
+exports.remove = async (id) => {
   await db.query(`DELETE FROM alternative_parameter WHERE alternative_id=${id}`);
 
   const result = await db.query(`DELETE FROM alternatives WHERE id=${id}`);
@@ -297,15 +288,5 @@ async function remove(id) {
     message = "alternative deleted successfully";
   }
 
-  return { message };
-}
-
-module.exports = {
-  getMultiple,
-  create,
-  update,
-  remove,
-  // addParameter,
-  getAlternativeParameters,
-  getRankAlternative,
+  return message;
 };

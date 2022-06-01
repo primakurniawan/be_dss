@@ -3,12 +3,11 @@ const app = express();
 const port = 3000;
 const cors = require("cors");
 
-const aspectsRouter = require("./routes/aspects");
-const typesRouter = require("./routes/types");
-const criteriaRouter = require("./routes/criteria");
-const parametersRouter = require("./routes/parameters");
-const alternativesRouter = require("./routes/alternatives");
-const storesRouter = require("./routes/stores");
+const aspectRouter = require("./routes/aspectRoute");
+const criteriaRouter = require("./routes/criteriaRouter");
+const parameterRouter = require("./routes/parameterRouter");
+const alternativeRouter = require("./routes/alternativeRoute");
+const storeRouter = require("./routes/storeRouter");
 
 app.use(express.json());
 app.use(
@@ -22,12 +21,11 @@ app.get("/", (req, res) => {
   res.json({ message: "ok" });
 });
 
-app.use("/types", typesRouter);
-app.use("/aspects", aspectsRouter);
+app.use("/aspects", aspectRouter);
 app.use("/criteria", criteriaRouter);
-app.use("/parameters", parametersRouter);
-app.use("/alternatives", alternativesRouter);
-app.use("/stores", storesRouter);
+app.use("/parameters", parameterRouter);
+app.use("/alternatives", alternativeRouter);
+app.use("/stores", storeRouter);
 
 /* Error handler middleware */
 app.use((err, req, res, next) => {

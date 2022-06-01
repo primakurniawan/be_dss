@@ -1,12 +1,11 @@
 const db = require("./db");
 const helper = require("../helper");
-const config = require("../config");
 const { default: axios } = require("axios");
 const Graph = require("./graph");
 
 async function getShortestPathStore(currentLocation, storeId) {
   const rows = await db.query(`SELECT * FROM stores`);
-  const iteration = rows.length % 24;
+  // const iteration = rows.length % 24;
   // const distanceRow = [];
   // for (let i = 0; i < iteration; i++) {}
   let storesCoordinates = ``;
@@ -50,23 +49,18 @@ async function getShortestPathStore(currentLocation, storeId) {
     `https://api.mapbox.com/directions/v5/mapbox/driving/${currentLocation[0]},${currentLocation[1]};${routesCoordinates}?access_token=pk.eyJ1IjoicHJpbWFrdXJuaWF3YW4iLCJhIjoiY2wzamVrOHhvMDZyMzNqbzQ1cmt4anJ0ZCJ9.plWxz32egjvGNLpCZL9uVg&continue_straight=false&overview=simplified&steps=true&language=id&waypoint_names=${routesNames}&geometries=geojson`
   );
 
-  return {
-    rowRoutes,
-    routes: routes.data,
-  };
+  return routes.data;
 }
 
 async function getMultiple() {
   const rows = await db.query(`SELECT * FROM stores;`);
   const data = helper.emptyOrRows(rows);
 
-  return {
-    data,
-  };
+  return data;
 }
 
-async function create(body) {
-  const result = await db.query(`INSERT INTO stores(name, address, contact, lon, lat) VALUES ('${body.name}','${body.address}','${body.contact}',${body.lon},${body.lat})`);
+async function create(name, address, contact, lon, lat) {
+  const result = await db.query(`INSERT INTO stores(name, address, contact, lon, lat) VALUES ('${name}','${address}','${contact}',${lon},${lat})`);
 
   let message = "Error in creating stores";
 
@@ -74,12 +68,11 @@ async function create(body) {
     message = "Stores created successfully";
   }
 
-  return { message };
+  return message;
 }
 
-async function update(id, body) {
-  console.log(body);
-  const result = await db.query(`UPDATE stores SET name='${body.name}',address='${body.address}',contact='${body.contact}',lon='${body.lon}',lat='${body.lat}' WHERE id=${id}`);
+async function update(id, name, address, contact, lon, lat) {
+  const result = await db.query(`UPDATE stores SET name='${name}',address='${address}',contact='${contact}',lon='${lon}',lat='${lat}' WHERE id=${id}`);
 
   let message = "Error in updating stores";
 
@@ -87,7 +80,7 @@ async function update(id, body) {
     message = "Stores updated successfully";
   }
 
-  return { message };
+  return message;
 }
 
 async function remove(id) {
@@ -99,7 +92,7 @@ async function remove(id) {
     message = "Stores deleted successfully";
   }
 
-  return { message };
+  return message;
 }
 
 module.exports = {
