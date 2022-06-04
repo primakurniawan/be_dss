@@ -2,7 +2,8 @@ const alternativeService = require("../services/alternativeService");
 
 exports.getAllAlternatives = async function (req, res, next) {
   try {
-    const alternatives = await alternativeService.getMultiple();
+    const { category_id } = req.query;
+    const alternatives = await alternativeService.getMultiple(category_id);
 
     res.status(200).json({
       status: "success",
@@ -16,8 +17,8 @@ exports.getAllAlternatives = async function (req, res, next) {
 
 exports.getRankAlternative = async function (req, res, next) {
   try {
-    const { parameters_id } = req.query;
-    const rankAlternative = await alternativeService.getRankAlternative(JSON.parse(parameters_id));
+    const { category_id, parameters_id } = req.query;
+    const rankAlternative = await alternativeService.getRankAlternative(category_id, JSON.parse(parameters_id));
     res.status(200).json({
       status: "success",
       data: rankAlternative,
@@ -30,8 +31,9 @@ exports.getRankAlternative = async function (req, res, next) {
 
 exports.createAlternative = async function (req, res, next) {
   try {
+    const { category_id } = req.query;
     const { name, parameters_id } = req.body;
-    const message = await alternativeService.create(name, parameters_id);
+    const message = await alternativeService.create(category_id, name, parameters_id);
     res.status(201).json({
       status: "success",
       message,

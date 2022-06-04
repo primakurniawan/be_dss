@@ -3,8 +3,8 @@ const helper = require("../helper");
 const { default: axios } = require("axios");
 const Graph = require("./graph");
 
-async function getShortestPathStore(currentLocation, storeId) {
-  const rows = await db.query(`SELECT * FROM stores`);
+async function getShortestPathStore(category_id, currentLocation, storeId) {
+  const rows = await db.query(`SELECT * FROM stores${category_id ? ` WHERE category_id=${category_id}` : ""}`);
   // const iteration = rows.length % 24;
   // const distanceRow = [];
   // for (let i = 0; i < iteration; i++) {}
@@ -52,15 +52,15 @@ async function getShortestPathStore(currentLocation, storeId) {
   return routes.data;
 }
 
-async function getMultiple() {
-  const rows = await db.query(`SELECT * FROM stores;`);
+async function getMultiple(category_id) {
+  const rows = await db.query(`SELECT * FROM stores${category_id ? ` WHERE category_id=${category_id}` : ""}`);
   const data = helper.emptyOrRows(rows);
 
   return data;
 }
 
-async function create(name, address, contact, lon, lat) {
-  const result = await db.query(`INSERT INTO stores(name, address, contact, lon, lat) VALUES ('${name}','${address}','${contact}',${lon},${lat})`);
+async function create(category_id, name, address, contact, lon, lat) {
+  const result = await db.query(`INSERT INTO stores(category_id, name, address, contact, lon, lat) VALUES (${category_id},'${name}','${address}','${contact}',${lon},${lat})`);
 
   let message = "Error in creating stores";
 

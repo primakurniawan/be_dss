@@ -1,18 +1,19 @@
 const db = require("./db");
 const { emptyOrRows } = require("../helper");
-const config = require("../config");
 
-exports.getMultiple = async () => {
+exports.getMultiple = async (category_id) => {
   const result = await db.query(
     `SELECT 
     alternative_id, alternatives.name AS alternative_name, 
     aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, 
-    parameter_id, parameters.name AS parameter_name, parameters.point 
+    parameter_id, parameters.name AS parameter_name, parameters.point,
+    categories.id AS category_id, categories.name AS category_name 
     FROM alternative_parameter 
     INNER JOIN alternatives ON alternative_id=alternatives.id 
     INNER JOIN parameters ON parameter_id=parameters.id 
     INNER JOIN criteria ON parameters.criteria_id=criteria.id 
     INNER JOIN aspects ON criteria.aspect_id=aspects.id 
+    INNER JOIN categories ON aspects.category_id=categories.id${category_id ? ` WHERE categories.id=${category_id}` : ""}
     GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
   );
 
@@ -59,50 +60,20 @@ exports.getMultiple = async () => {
   return data;
 };
 
-exports.getAlternativeParameters = async (id) => {
-  const result = await db.query(
-    `SELECT alternative_id, alternatives.name AS alternative_name, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, parameter_id, parameters.name AS parameter_name, parameters.point FROM alternative_parameter INNER JOIN alternatives ON alternative_id=alternatives.id INNER JOIN parameters ON parameter_id=parameters.id INNER JOIN criteria ON parameters.criteria_id=criteria.id INNER JOIN aspects ON criteria.aspect_id=aspects.id WHERE alternative_parameter.alternative_id=${id} GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
-  );
-
-  const alternative = {
-    alternative_id: result[0].alternative_id,
-    alternative_name: result[0].alternative_name,
-    aspects: [],
-  };
-  result.forEach((element) => {
-    const criteria = {
-      criteria_id: element.criteria_id,
-      criteria_name: element.criteria_name,
-      criteria_percentage: element.criteria_percentage,
-      parameter: {
-        parameter_id: element.parameter_id,
-        parameter_name: element.parameter_name,
-        point: element.point,
-      },
-    };
-
-    const aspect = {
-      aspect_id: element.aspect_id,
-      aspect_name: element.aspect_name,
-      aspect_percentage: element.aspect_percentage,
-      criteria: [criteria],
-    };
-
-    if (element.aspect_id === alternative.aspects[alternative.aspects.length - 1]?.aspect_id && alternative.aspects.length !== 0) {
-      alternative.aspects[alternative.aspects.length - 1].criteria.push(criteria);
-    } else {
-      alternative.aspects.push(aspect);
-    }
-  });
-
-  const data = emptyOrRows(alternative);
-
-  return data;
-};
-
-exports.getRankAlternative = async (parameters_id) => {
+exports.getRankAlternative = async (category_id, parameters_id) => {
   const resultAlternatives = await db.query(
-    `SELECT alternative_id, alternatives.name AS alternative_name, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage , criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, parameter_id, parameters.name AS parameter_name, parameters.point FROM alternative_parameter INNER JOIN alternatives ON alternative_id=alternatives.id INNER JOIN parameters ON parameter_id=parameters.id INNER JOIN criteria ON parameters.criteria_id=criteria.id INNER JOIN aspects ON criteria.aspect_id=aspects.id WHERE alternative_parameter.alternative_id GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
+    `SELECT 
+    alternative_id, alternatives.name AS alternative_name, 
+    aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, 
+    parameter_id, parameters.name AS parameter_name, parameters.point,
+    categories.id AS category_id, categories.name AS category_name 
+    FROM alternative_parameter 
+    INNER JOIN alternatives ON alternative_id=alternatives.id 
+    INNER JOIN parameters ON parameter_id=parameters.id 
+    INNER JOIN criteria ON parameters.criteria_id=criteria.id 
+    INNER JOIN aspects ON criteria.aspect_id=aspects.id 
+    INNER JOIN categories ON aspects.category_id=categories.id${category_id ? ` WHERE categories.id=${category_id}` : ""}
+    GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
   );
 
   const alternatives = [];
@@ -144,10 +115,16 @@ exports.getRankAlternative = async (parameters_id) => {
   });
 
   const resultParameters = await db.query(
-    `SELECT aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, parameters.id AS parameter_id,  parameters.name AS parameter_name, parameters.point 
-    FROM parameters INNER JOIN criteria ON criteria_id=criteria.id INNER JOIN aspects ON aspect_id=aspects.id  WHERE parameters.id IN (${parameters_id.join(
-      ","
-    )}) GROUP BY aspect_id, criteria_id, parameter_id`
+    `SELECT 
+    aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, 
+    criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, 
+    parameters.id AS parameter_id,  parameters.name AS parameter_name, parameters.point 
+    FROM parameters 
+    INNER JOIN criteria ON criteria_id=criteria.id 
+    INNER JOIN aspects ON aspect_id=aspects.id
+    INNER JOIN categories ON aspects.category_id=categories.id
+    WHERE parameters.id IN (${parameters_id.join(",")}) AND${category_id ? ` categories.id=${category_id}` : ""}
+    GROUP BY aspect_id, criteria_id, parameter_id`
   );
 
   const aspects = [];
@@ -241,8 +218,8 @@ exports.getRankAlternative = async (parameters_id) => {
   return rank;
 };
 
-exports.create = async (name, parameters_id) => {
-  const resultAlternative = await db.query(`INSERT INTO alternatives(name) VALUES ('${name}')`);
+exports.create = async (category_id, name, parameters_id) => {
+  const resultAlternative = await db.query(`INSERT INTO alternatives(category_id, name) VALUES (${category_id},'${name}')`);
 
   const parameters = parameters_id.map((e) => {
     return `(${resultAlternative.insertId},${e})`;

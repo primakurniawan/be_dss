@@ -2,7 +2,8 @@ const storeService = require("../services/storeService");
 
 exports.getAllStores = async (req, res, next) => {
   try {
-    const stores = await storeService.getMultiple();
+    const { category_id } = req.query;
+    const stores = await storeService.getMultiple(parseInt(category_id));
     res.status(200).json({
       status: "success",
       data: stores,
@@ -15,8 +16,9 @@ exports.getAllStores = async (req, res, next) => {
 
 exports.createStore = async (req, res, next) => {
   try {
+    const { category_id } = req.query;
     const { name, address, contact, lon, lat } = req.body;
-    const message = await storeService.create(name, address, contact, lon, lat);
+    const message = await storeService.create(category_id, name, address, contact, parseFloat(lon), parseFloat(lat));
     res.status(201).json({
       status: "success",
       message,
@@ -58,8 +60,8 @@ exports.deleteStore = async (req, res, next) => {
 
 exports.getShortestPath = async (req, res, next) => {
   try {
-    const { current_location, store_id } = req.body;
-    const route = await storeService.getShortestPathStore(current_location, store_id);
+    const { category_id, current_location, store_id } = req.query;
+    const route = await storeService.getShortestPathStore(category_id, JSON.parse(current_location), store_id);
     res.status(200).json({
       status: "success",
       data: route,

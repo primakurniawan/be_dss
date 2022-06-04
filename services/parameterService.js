@@ -2,9 +2,17 @@ const db = require("./db");
 const { emptyOrRows } = require("../helper");
 const config = require("../config");
 
-async function getMultiple() {
-  const rows =
-    await db.query(`SELECT parameters.id, parameters.name, parameters.point, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage  FROM parameters INNER JOIN criteria ON parameters.criteria_id = criteria.id INNER JOIN aspects ON criteria.aspect_id = aspects.id 
+async function getMultiple(category_id) {
+  const rows = await db.query(`
+    SELECT 
+    parameters.id, parameters.name, parameters.point, 
+    criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, 
+    aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage,  
+    categories.id AS category_id, categories.name AS category_name
+    FROM parameters 
+    INNER JOIN criteria ON parameters.criteria_id = criteria.id 
+    INNER JOIN aspects ON criteria.aspect_id = aspects.id
+    INNER JOIN categories ON aspects.category_id = categories.id${category_id ? ` WHERE category_id=${category_id}` : ""}
   `);
 
   const data = emptyOrRows(rows);
@@ -48,15 +56,18 @@ async function remove(id) {
   return message;
 }
 
-async function getParametersDetail() {
+async function getParametersDetail(category_id) {
   const result = await db.query(
     `SELECT 
     aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, 
     criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, 
-    parameters.id, parameters.name, parameters.point 
+    parameters.id, parameters.name, parameters.point, 
+    categories.id AS category_id, categories.name AS category_name
     FROM parameters 
     INNER JOIN criteria ON parameters.criteria_id=criteria.id 
-    INNER JOIN aspects ON criteria.aspect_id=aspects.id`
+    INNER JOIN aspects ON criteria.aspect_id=aspects.id
+    INNER JOIN categories ON aspects.category_id=categories.id${category_id ? ` WHERE category_id=${category_id}` : ""}
+    `
   );
 
   const aspects = [];

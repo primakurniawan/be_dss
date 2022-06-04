@@ -2,7 +2,8 @@ const parameterService = require("../services/parameterService.js");
 
 exports.getAllParameters = async (req, res, next) => {
   try {
-    const parameters = await parameterService.getMultiple();
+    const { category_id } = req.query;
+    const parameters = await parameterService.getMultiple(category_id);
     res.json({
       status: "success",
       data: parameters,
@@ -58,7 +59,8 @@ exports.deleteParameter = async (req, res, next) => {
 
 exports.getAllParametersDetail = async (req, res, next) => {
   try {
-    const parameters = await parameterService.getParametersDetail();
+    const { category_id } = req.query;
+    const parameters = await parameterService.getParametersDetail(category_id);
     res.json({
       status: "success",
       data: parameters,

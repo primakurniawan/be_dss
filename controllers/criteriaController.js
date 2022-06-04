@@ -2,7 +2,8 @@ const criteriaService = require("../services/criteriaService");
 
 exports.getAllCriteria = async (req, res, next) => {
   try {
-    const criteria = await criteriaService.getMultiple();
+    const { category_id } = req.query;
+    const criteria = await criteriaService.getMultiple(parseInt(category_id));
     res.status(200).json({
       status: "success",
       data: criteria,

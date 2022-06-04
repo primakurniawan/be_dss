@@ -3,11 +3,12 @@ const app = express();
 const port = 3000;
 const cors = require("cors");
 
+const categoryRouter = require("./routes/categoryRoute");
 const aspectRouter = require("./routes/aspectRoute");
-const criteriaRouter = require("./routes/criteriaRouter");
-const parameterRouter = require("./routes/parameterRouter");
+const criteriaRouter = require("./routes/criteriaRoute");
+const parameterRouter = require("./routes/parameterRoute");
 const alternativeRouter = require("./routes/alternativeRoute");
-const storeRouter = require("./routes/storeRouter");
+const storeRouter = require("./routes/storeRoute");
 
 app.use(express.json());
 app.use(
@@ -17,10 +18,7 @@ app.use(
 );
 app.use(cors());
 
-app.get("/", (req, res) => {
-  res.json({ message: "ok" });
-});
-
+app.use("/categories", categoryRouter);
 app.use("/aspects", aspectRouter);
 app.use("/criteria", criteriaRouter);
 app.use("/parameters", parameterRouter);

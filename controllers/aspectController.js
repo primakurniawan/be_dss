@@ -2,7 +2,8 @@ const aspectService = require("../services/aspectService.js");
 
 exports.getAspects = async (req, res, next) => {
   try {
-    const aspects = await aspectService.getMultiple();
+    const { category_id } = req.query;
+    const aspects = await aspectService.getMultiple(parseInt(category_id));
     res.status(200).json({
       status: "success",
       data: aspects,
@@ -15,8 +16,9 @@ exports.getAspects = async (req, res, next) => {
 
 exports.createAspect = async (req, res, next) => {
   try {
+    const { category_id } = req.query;
     const { name, percentage } = req.body;
-    const message = await aspectService.create(name, percentage);
+    const message = await aspectService.create(parseInt(category_id), name, percentage);
     res.status(201).json({
       status: "success",
       message,

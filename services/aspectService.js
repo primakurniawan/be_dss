@@ -2,15 +2,15 @@ const db = require("./db");
 const helper = require("../helper");
 const config = require("../config");
 
-async function getMultiple() {
-  const rows = await db.query(`SELECT * FROM aspects;`);
+async function getMultiple(category_id) {
+  const rows = await db.query(`SELECT * FROM aspects${category_id ? ` WHERE category_id=${category_id}` : ""};`);
   const data = helper.emptyOrRows(rows);
 
   return data;
 }
 
-async function create(name, percentage) {
-  const result = await db.query(`INSERT INTO aspects(name, percentage) VALUES ('${name}',${percentage})`);
+async function create(category_id, name, percentage) {
+  const result = await db.query(`INSERT INTO aspects(category_id, name, percentage) VALUES (${category_id},'${name}',${percentage})`);
 
   let message = "Error in creating aspect";
 
