@@ -1,7 +1,7 @@
 const db = require("./db");
 const helper = require("../helper");
 const { default: axios } = require("axios");
-const Sord = require("./S-Ord");
+const SOrd = require("./S-Ord");
 
 async function getShortestPathStore(category_id, currentLocation, storeId) {
   const rows = await db.query(`SELECT * FROM stores${category_id ? ` WHERE category_id=${category_id}` : ""}`);
@@ -29,11 +29,11 @@ async function getShortestPathStore(category_id, currentLocation, storeId) {
     });
   });
 
-  const shortestPath = new Sord(map).findShortestPath(0, storeId).map((e) => parseInt(e));
+  const shortestPathNew = new SOrd(map).findShortestPath(0, storeId).map((e) => parseInt(e));
 
   const rowRoutes = [];
-  shortestPath.forEach((e, i) => {
-    if (e !== 0 || i !== 0) rowRoutes.push(rows.filter((row) => row.id === e)[0]);
+  shortestPathNew.forEach((e, i) => {
+    if (e !== 0) rowRoutes.push(rows.filter((row) => row.id === e)[0]);
   });
 
   let routesCoordinates = ``;

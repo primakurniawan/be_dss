@@ -1,13 +1,15 @@
+const { LinkedList } = require("../LinkedList");
+
 class SOrd {
   constructor(map) {
     this.map = map;
   }
 
   extractKeys(obj) {
-    var keys = [],
+    var keys = new LinkedList(),
       key;
     for (key in obj) {
-      Object.prototype.hasOwnProperty.call(obj, key) && keys.push(key);
+      Object.prototype.hasOwnProperty.call(obj, key) && keys.add(key);
     }
     return keys;
   }
@@ -18,33 +20,30 @@ class SOrd {
 
   findPaths(start, end) {
     var costs = {},
-      open = { 0: [start] },
+      open = { 0: new LinkedList().add(start) },
       predecessors = {},
       keys;
 
     var addToOpen = function (cost, vertex) {
       var key = "" + cost;
-      if (!open[key]) open[key] = [];
-      open[key].push(vertex);
+      if (!open[key]) open[key] = new LinkedList();
+      open[key].add(vertex);
     };
 
     costs[start] = 0;
 
     while (open) {
-      console.log("open", open);
       if (!(keys = this.extractKeys(open)).length) break;
 
-      keys.sort(this.sorter);
+      keys.sort();
 
-      console.log("keys", keys);
-
-      var key = keys[0],
+      var key = keys.findElement(0).value,
         bucket = open[key],
-        node = bucket.shift(),
+        node = bucket.removeFrom(0),
         currentCost = parseFloat(key),
         adjacentNodes = this.map[node] || {};
 
-      if (!bucket.length) delete open[key];
+      if (!bucket.size) delete open[key];
 
       for (var vertex in adjacentNodes) {
         if (Object.prototype.hasOwnProperty.call(adjacentNodes, vertex)) {
@@ -69,11 +68,11 @@ class SOrd {
   }
 
   extractShortest(predecessors, end) {
-    var nodes = [],
+    var nodes = new LinkedList(),
       u = end;
 
     while (u !== undefined) {
-      nodes.push(u);
+      nodes.add(u);
       u = predecessors[u];
     }
 
@@ -86,7 +85,7 @@ class SOrd {
 
     const shortest = this.extractShortest(predecessors, end);
 
-    return shortest;
+    return shortest.array;
   }
 }
 
