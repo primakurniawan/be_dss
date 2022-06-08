@@ -6,8 +6,7 @@ async function getMultiple(category_id) {
   const rows = await db.query(
     `SELECT 
     criteria.id, criteria.name, criteria.percentage, 
-    aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, 
-    categories.id AS category_id, categories.name AS category_name
+    aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage
     FROM criteria 
     INNER JOIN aspects ON criteria.aspect_id = aspects.id 
     INNER JOIN categories ON aspects.category_id = categories.id${category_id ? ` WHERE category_id=${category_id}` : ""};
