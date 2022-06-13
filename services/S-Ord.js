@@ -1,92 +1,67 @@
-const { LinkedList } = require("../LinkedList");
+const { LinkedList } = require("./LinkedList");
 
-class SOrd {
-  constructor(map) {
-    this.map = map;
+function extractKeys(obj) {
+  var keys = new LinkedList(),
+    key;
+  for (key in obj) {
+    Object.prototype.hasOwnProperty.call(obj, key) && keys.add(key);
   }
+  return keys;
+}
 
-  extractKeys(obj) {
-    var keys = new LinkedList(),
-      key;
-    for (key in obj) {
-      Object.prototype.hasOwnProperty.call(obj, key) && keys.add(key);
-    }
-    return keys;
-  }
+function findShortestPath(map, start, end) {
+  var costs = {},
+    open = { 0: new LinkedList().add(start) },
+    predecessors = {},
+    keys;
 
-  sorter(a, b) {
-    return parseFloat(a) - parseFloat(b);
-  }
+  var addToOpen = function (cost, vertex) {
+    var key = "" + cost;
+    if (!open[key]) open[key] = new LinkedList();
+    open[key].add(vertex);
+  };
 
-  findPaths(start, end) {
-    var costs = {},
-      open = { 0: new LinkedList().add(start) },
-      predecessors = {},
-      keys;
+  costs[start] = 0;
 
-    var addToOpen = function (cost, vertex) {
-      var key = "" + cost;
-      if (!open[key]) open[key] = new LinkedList();
-      open[key].add(vertex);
-    };
+  while (open) {
+    if (!(keys = extractKeys(open)).length) break;
 
-    costs[start] = 0;
+    keys.sort();
 
-    while (open) {
-      if (!(keys = this.extractKeys(open)).length) break;
+    var key = keys.findElement(0).value,
+      bucket = open[key],
+      node = bucket.removeFrom(0),
+      currentCost = parseFloat(key),
+      adjacentNodes = map[node] || {};
 
-      keys.sort();
+    if (!bucket.size) delete open[key];
 
-      var key = keys.findElement(0).value,
-        bucket = open[key],
-        node = bucket.removeFrom(0),
-        currentCost = parseFloat(key),
-        adjacentNodes = this.map[node] || {};
+    for (var vertex in adjacentNodes) {
+      if (Object.prototype.hasOwnProperty.call(adjacentNodes, vertex)) {
+        var cost = adjacentNodes[vertex],
+          totalCost = cost + currentCost,
+          vertexCost = costs[vertex];
 
-      if (!bucket.size) delete open[key];
-
-      for (var vertex in adjacentNodes) {
-        if (Object.prototype.hasOwnProperty.call(adjacentNodes, vertex)) {
-          var cost = adjacentNodes[vertex],
-            totalCost = cost + currentCost,
-            vertexCost = costs[vertex];
-
-          if (vertexCost === undefined || vertexCost > totalCost) {
-            costs[vertex] = totalCost;
-            addToOpen(totalCost, vertex);
-            predecessors[vertex] = node;
-          }
+        if (vertexCost === undefined || vertexCost > totalCost) {
+          costs[vertex] = totalCost;
+          addToOpen(totalCost, vertex);
+          predecessors[vertex] = node;
         }
       }
     }
-
-    if (costs[end] === undefined) {
-      return null;
-    } else {
-      return predecessors;
-    }
   }
 
-  extractShortest(predecessors, end) {
-    var nodes = new LinkedList(),
-      u = end;
+  var nodes = new LinkedList(),
+    u = end;
 
-    while (u !== undefined) {
-      nodes.add(u);
-      u = predecessors[u];
-    }
-
-    nodes.reverse();
-    return nodes;
+  while (u !== undefined) {
+    nodes.add(u);
+    u = predecessors[u];
   }
 
-  findShortestPath(start, end) {
-    const predecessors = this.findPaths(start, end);
+  nodes.reverse();
 
-    const shortest = this.extractShortest(predecessors, end);
-
-    return shortest.array;
-  }
+  return nodes.array;
 }
 
-module.exports = SOrd;
+module.exports = findShortestPath;
