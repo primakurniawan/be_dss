@@ -1,19 +1,19 @@
 const { LinkedList } = require("./LinkedList");
 
+function extractKeys(obj) {
+  var keys = new LinkedList(),
+    key;
+  for (key in obj) {
+    Object.prototype.hasOwnProperty.call(obj, key) && keys.add(key);
+  }
+  return keys;
+}
+
 function findShortestPath(map, start, end) {
   var costs = {},
     open = { 0: new LinkedList().add(start) },
     predecessors = {},
     keys;
-
-  var extractKeys = function (obj) {
-    var keys = new LinkedList(),
-      key;
-    for (key in obj) {
-      Object.prototype.hasOwnProperty.call(obj, key) && keys.add(key);
-    }
-    return keys;
-  };
 
   var addToOpen = function (cost, vertex) {
     var key = "" + cost;

@@ -31,46 +31,6 @@ class LinkedList {
     return this;
   }
 
-  indexOf(value) {
-    let count = 0;
-    let current = this.head;
-
-    while (current !== null) {
-      if (current.value === value) return count;
-      count++;
-      current = current.next;
-    }
-
-    return -1;
-  }
-
-  map(callback) {
-    let curr = this.head;
-    while (curr) {
-      callback(curr);
-      curr = curr.next;
-    }
-  }
-
-  mapValues(callback) {
-    let curr = this.head;
-    while (curr) {
-      callback(curr.value);
-      curr = curr.next;
-    }
-  }
-
-  clear() {
-    this.head = null;
-    this.length = 0;
-  }
-
-  fromArray(arr) {
-    arr.forEach((item) => {
-      this.add(item);
-    });
-  }
-
   removeFrom(index) {
     if (index < 0 || index >= this.size) {
       throw new Error("Out of Indexed!");

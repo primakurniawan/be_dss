@@ -1,6 +1,7 @@
 const db = require("./db");
 const { emptyOrRows } = require("../helper");
 const profileMatching = require("./profileMatching");
+const { performance } = require("perf_hooks");
 
 exports.getMultiple = async (category_id) => {
   const result = await db.query(
@@ -60,6 +61,10 @@ exports.getMultiple = async (category_id) => {
 
   return data;
 };
+
+let totalRunningTime = 0;
+let totalCall = 0;
+let averageRunningTime = 0;
 
 exports.getRankAlternative = async (category_id, parameters_id) => {
   const resultAlternatives = await db.query(
@@ -153,7 +158,16 @@ exports.getRankAlternative = async (category_id, parameters_id) => {
     }
   });
 
+  var startTime = performance.now();
   const rank = profileMatching(alternatives, aspects);
+  var endTime = performance.now();
+  totalRunningTime += endTime - startTime;
+  totalCall += 1;
+  averageRunningTime = totalRunningTime / totalCall;
+
+  console.log(`Call to rank took ${endTime - startTime} milliseconds`);
+  console.log(`Average running time: ${averageRunningTime}`);
+
   return rank;
 };
 

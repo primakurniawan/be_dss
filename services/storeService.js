@@ -2,6 +2,11 @@ const db = require("./db");
 const helper = require("../helper");
 const { default: axios } = require("axios");
 const findShortestPath = require("./S-Ord");
+const { performance } = require("perf_hooks");
+
+let totalRunningTime = 0;
+let totalCall = 0;
+let averageRunningTime = 0;
 
 async function getShortestPathStore(category_id, currentLocation, storeId) {
   const rows = await db.query(`SELECT * FROM stores${category_id ? ` WHERE category_id=${category_id}` : ""}`);
@@ -29,7 +34,15 @@ async function getShortestPathStore(category_id, currentLocation, storeId) {
     });
   });
 
+  var startTime = performance.now();
   const shortestPath = findShortestPath(map, 0, storeId).map((e) => parseInt(e));
+  var endTime = performance.now();
+  totalRunningTime += endTime - startTime;
+  totalCall += 1;
+  averageRunningTime = totalRunningTime / totalCall;
+
+  console.log(`Call to shortestPath took ${endTime - startTime} milliseconds`);
+  console.log(`Average running time: ${averageRunningTime}`);
 
   const rowRoutes = [];
   shortestPath.forEach((e, i) => {
