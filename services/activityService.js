@@ -7,22 +7,20 @@ exports.getMultiple = async (category_id) => {
   console.log(category_id);
   const result = await db.query(
     `SELECT 
-    alternative_id, alternatives.name AS alternative_name, 
+    activity_id, activities.name AS activity_name, 
     aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, 
     parameter_id, parameters.name AS parameter_name, parameters.point,
     categories.id AS category_id, categories.name AS category_name 
-    FROM alternative_parameter 
-    INNER JOIN alternatives ON alternative_id=alternatives.id 
+    FROM activity_parameter 
+    INNER JOIN activities ON activity_id=activities.id 
     INNER JOIN parameters ON parameter_id=parameters.id 
     INNER JOIN criteria ON parameters.criteria_id=criteria.id 
     INNER JOIN aspects ON criteria.aspect_id=aspects.id 
-    INNER JOIN categories ON aspects.category_id=categories.id${category_id ? ` WHERE alternatives.category_id=${category_id}` : ""}
-    GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
+    INNER JOIN categories ON aspects.category_id=categories.id${category_id ? ` WHERE activities.category_id=${category_id}` : ""}
+    GROUP BY activity_id, aspect_id, criteria_id, parameter_id`
   );
 
-  console.log(result);
-
-  const alternatives = [];
+  const activities = [];
 
   result.forEach((element) => {
     const criteria = {
@@ -43,24 +41,24 @@ exports.getMultiple = async (category_id) => {
       criteria: [criteria],
     };
 
-    const alternative = {
-      alternative_id: element.alternative_id,
-      alternative_name: element.alternative_name,
+    const activity = {
+      activity_id: element.activity_id,
+      activity_name: element.activity_name,
       aspects: [aspect],
     };
 
-    if (element.alternative_id === alternatives[alternatives.length - 1]?.alternative_id && alternatives.length !== 0) {
-      if (element.aspect_id === alternatives[alternatives.length - 1].aspects[alternatives[alternatives.length - 1].aspects.length - 1]?.aspect_id) {
-        alternatives[alternatives.length - 1].aspects[alternatives[alternatives.length - 1].aspects.length - 1].criteria.push(criteria);
+    if (element.activity_id === activities[activities.length - 1]?.activity_id && activities.length !== 0) {
+      if (element.aspect_id === activities[activities.length - 1].aspects[activities[activities.length - 1].aspects.length - 1]?.aspect_id) {
+        activities[activities.length - 1].aspects[activities[activities.length - 1].aspects.length - 1].criteria.push(criteria);
       } else {
-        alternatives[alternatives.length - 1].aspects.push(aspect);
+        activities[activities.length - 1].aspects.push(aspect);
       }
     } else {
-      alternatives.push(alternative);
+      activities.push(activity);
     }
   });
 
-  const data = emptyOrRows(alternatives);
+  const data = emptyOrRows(activities);
 
   return data;
 };
@@ -69,26 +67,26 @@ let totalRunningTime = 0;
 let totalCall = 0;
 let averageRunningTime = 0;
 
-exports.getRankAlternative = async (category_id, parameters_id) => {
-  const resultAlternatives = await db.query(
+exports.getRankActivity = async (category_id, parameters_id) => {
+  const resultActivities = await db.query(
     `SELECT 
-    alternative_id, alternatives.name AS alternative_name, 
+    activity_id, activities.name AS activity_name, 
     aspects.id AS aspect_id, aspects.name AS aspect_name, aspects.percentage AS aspect_percentage, criteria.id AS criteria_id, criteria.name AS criteria_name, criteria.percentage AS criteria_percentage, 
     parameter_id, parameters.name AS parameter_name, parameters.point,
     categories.id AS category_id, categories.name AS category_name 
-    FROM alternative_parameter 
-    INNER JOIN alternatives ON alternative_id=alternatives.id 
+    FROM activity_parameter 
+    INNER JOIN activities ON activity_id=activities.id 
     INNER JOIN parameters ON parameter_id=parameters.id 
     INNER JOIN criteria ON parameters.criteria_id=criteria.id 
     INNER JOIN aspects ON criteria.aspect_id=aspects.id 
-    INNER JOIN categories ON alternatives.category_id=categories.id
+    INNER JOIN categories ON activities.category_id=categories.id
     WHERE categories.id=${category_id}
-    GROUP BY alternative_id, aspect_id, criteria_id, parameter_id`
+    GROUP BY activity_id, aspect_id, criteria_id, parameter_id`
   );
 
-  const alternatives = [];
+  const activities = [];
 
-  resultAlternatives.forEach((element) => {
+  resultActivities.forEach((element) => {
     const criteria = {
       criteria_id: element.criteria_id,
       criteria_name: element.criteria_name,
@@ -107,20 +105,20 @@ exports.getRankAlternative = async (category_id, parameters_id) => {
       criteria: [criteria],
     };
 
-    const alternative = {
-      alternative_id: element.alternative_id,
-      alternative_name: element.alternative_name,
+    const activity = {
+      activity_id: element.activity_id,
+      activity_name: element.activity_name,
       aspects: [aspect],
     };
 
-    if (element.alternative_id === alternatives[alternatives.length - 1]?.alternative_id && alternatives.length !== 0) {
-      if (element.aspect_id === alternatives[alternatives.length - 1].aspects[alternatives[alternatives.length - 1].aspects.length - 1]?.aspect_id) {
-        alternatives[alternatives.length - 1].aspects[alternatives[alternatives.length - 1].aspects.length - 1].criteria.push(criteria);
+    if (element.activity_id === activities[activities.length - 1]?.activity_id && activities.length !== 0) {
+      if (element.aspect_id === activities[activities.length - 1].aspects[activities[activities.length - 1].aspects.length - 1]?.aspect_id) {
+        activities[activities.length - 1].aspects[activities[activities.length - 1].aspects.length - 1].criteria.push(criteria);
       } else {
-        alternatives[alternatives.length - 1].aspects.push(aspect);
+        activities[activities.length - 1].aspects.push(aspect);
       }
     } else {
-      alternatives.push(alternative);
+      activities.push(activity);
     }
   });
 
@@ -164,7 +162,7 @@ exports.getRankAlternative = async (category_id, parameters_id) => {
   });
 
   var startTime = performance.now();
-  const rank = profileMatching(alternatives, aspects);
+  const rank = profileMatching(activities, aspects);
   var endTime = performance.now();
   totalRunningTime += endTime - startTime;
   totalCall += 1;
@@ -177,51 +175,51 @@ exports.getRankAlternative = async (category_id, parameters_id) => {
 };
 
 exports.create = async (category_id, name, parameters_id) => {
-  const resultAlternative = await db.query(`INSERT INTO alternatives(category_id, name) VALUES (${category_id},'${name}')`);
+  const resultActivities = await db.query(`INSERT INTO activities(category_id, name) VALUES (${category_id},'${name}')`);
 
   const parameters = parameters_id.map((e) => {
-    return `(${resultAlternative.insertId},${e})`;
+    return `(${resultActivities.insertId},${e})`;
   });
-  const result = await db.query(`INSERT INTO alternative_parameter(alternative_id, parameter_id) VALUES ${parameters.join(",")}`);
+  const result = await db.query(`INSERT INTO activity_parameter(activity_id, parameter_id) VALUES ${parameters.join(",")}`);
 
-  let message = "Error in creating alternative";
+  let message = "Error in creating activity";
 
   if (result.affectedRows) {
-    message = "alternative created successfully";
+    message = "activity created successfully";
   }
 
   return message;
 };
 
 exports.update = async (id, name, parameters_id) => {
-  await db.query(`UPDATE alternatives SET name='${name}' WHERE id=${id}`);
+  await db.query(`UPDATE activities SET name='${name}' WHERE id=${id}`);
 
-  const deleteResult = await db.query(`DELETE FROM alternative_parameter WHERE alternative_id=${parseInt(id)}`);
+  const deleteResult = await db.query(`DELETE FROM activity_parameter WHERE activity_id=${parseInt(id)}`);
   console.log(deleteResult.affectedRows);
 
   const parameters = parameters_id.map((e) => {
     return `(${id},${e})`;
   });
-  const result = await db.query(`INSERT INTO alternative_parameter(alternative_id, parameter_id) VALUES ${parameters.join(",")}`);
+  const result = await db.query(`INSERT INTO activity_parameter(activity_id, parameter_id) VALUES ${parameters.join(",")}`);
 
-  let message = "Error in updating alternative";
+  let message = "Error in updating activity";
 
   if (result.affectedRows) {
-    message = "alternative updated successfully";
+    message = "activity updated successfully";
   }
 
   return message;
 };
 
 exports.remove = async (id) => {
-  await db.query(`DELETE FROM alternative_parameter WHERE alternative_id=${id}`);
+  await db.query(`DELETE FROM activity_parameter WHERE activity_id=${id}`);
 
-  const result = await db.query(`DELETE FROM alternatives WHERE id=${id}`);
+  const result = await db.query(`DELETE FROM activities WHERE id=${id}`);
 
-  let message = "Error in deleting alternative";
+  let message = "Error in deleting activity";
 
   if (result.affectedRows) {
-    message = "alternative deleted successfully";
+    message = "activity deleted successfully";
   }
 
   return message;

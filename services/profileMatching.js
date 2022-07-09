@@ -48,9 +48,19 @@ function profileMatching(alternatives, aspects) {
           });
         }
       });
-      alternative_aspect.point = (alternative_aspect.criteria.reduce((accumulator, currentValue) => accumulator + currentValue.point, 0) * alternative_aspect.aspect_percentage) / 100;
+      // alternative_aspect.point = (alternative_aspect.criteria.reduce((accumulator, currentValue) => accumulator + currentValue.point, 0) * alternative_aspect.aspect_percentage) / 100;
+      alternative_aspect.point = 0;
+      alternative_aspect.criteria.forEach((criteria) => {
+        if (criteria.point !== undefined) {
+          alternative_aspect.point += criteria.point * (criteria.criteria_percentage / 100);
+        }
+      });
+      console.log("alternative_aspect.point", alternative_aspect.point);
     });
-    alternative.point = alternative.aspects.reduce((accumulator, currentValue) => accumulator + currentValue.point, 0);
+    alternative.point = 0;
+    alternative.aspects.forEach((aspect) => {
+      alternative.point += aspect.point * (aspect.aspect_percentage / 100);
+    });
   });
 
   const rank = alternatives
